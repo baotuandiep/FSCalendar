@@ -127,7 +127,8 @@
             item = [self.gregorian components:NSCalendarUnitDay fromDate:head toDate:date options:0].day;
             break;
         }
-        case FSCalendarScopeWeek: {
+        case FSCalendarScopeWeek:
+        case FSCalendarScopeNone: {
             section = [self.gregorian components:NSCalendarUnitWeekOfYear fromDate:[self.gregorian fs_firstDayOfWeek:self.minimumDate] toDate:[self.gregorian fs_firstDayOfWeek:date] options:0].weekOfYear;
             item = (([self.gregorian component:NSCalendarUnitWeekday fromDate:date] - self.gregorian.firstWeekday) + 7) % 7;
             break;
