@@ -332,8 +332,11 @@ typedef NS_ENUM(NSUInteger, FSCalendarOrientation) {
             
         }
         _collectionView.fs_height = FSCalendarHalfFloor(_collectionView.fs_height);
+    } else if (self.transitionCoordinator.representingScope == FSCalendarScopeNone) {
+        [_daysContainer.superview bringSubviewToFront:_daysContainer];
+        _daysContainer.frame = CGRectMake(0, 0, self.fs_width, 30);
+        _collectionView.frame = CGRectMake(0, 65, _daysContainer.fs_width, 30);
     }
-    
 }
 
 #if TARGET_INTERFACE_BUILDER

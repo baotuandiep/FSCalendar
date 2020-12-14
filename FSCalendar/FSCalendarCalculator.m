@@ -85,7 +85,8 @@
             return date;
             break;
         }
-        case FSCalendarScopeWeek: {
+        case FSCalendarScopeWeek:
+        case FSCalendarScopeNone: {
             NSDate *currentPage = [self weekForSection:indexPath.section];
             NSDate *date = [self.gregorian dateByAddingUnit:NSCalendarUnitDay value:indexPath.item toDate:currentPage options:0];
             return date;
