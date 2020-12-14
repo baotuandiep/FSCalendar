@@ -35,6 +35,9 @@ class DIYExampleViewController: UIViewController, FSCalendarDataSource, FSCalend
         calendar.allowsMultipleSelection = true
         view.addSubview(calendar)
         self.calendar = calendar
+        calendar.noneView = UIView()
+        calendar.frame.size.width = view.frame.size.width
+        calendar.noneView.backgroundColor = .black
         
         calendar.calendarHeaderView.backgroundColor = UIColor.lightGray.withAlphaComponent(0.1)
         calendar.calendarWeekdayView.backgroundColor = UIColor.lightGray.withAlphaComponent(0.1)

@@ -404,6 +404,11 @@ IB_DESIGNABLE
 @property (readonly, nonatomic) NSArray<NSDate *> *selectedDates;
 
 /**
+ The weekday view of the calendar
+ */
+@property (strong, nonatomic) UIView *noneView;
+
+/**
  Reload the dates and appearance of the calendar.
  */
 - (void)reloadData;

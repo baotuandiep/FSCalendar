@@ -174,6 +174,16 @@
         CGFloat progress = translation/maxTranslation;
         progress;
     });
+    if (self.transitionAttributes.targetScope == FSCalendarScopeNone || self.calendar.scope == FSCalendarScopeNone) {
+        CGFloat noneScopeProgress = progress;
+        if (self.calendar.scope == FSCalendarScopeNone) {
+            noneScopeProgress = 1 - noneScopeProgress;
+        }
+        self.calendar.noneView.alpha = noneScopeProgress;
+        NSLog(@"noneScopeProgress %f", noneScopeProgress);
+        self.calendar.noneView.fs_width = self.calendar.noneView.superview.fs_width;
+        [self.calendar.noneView.superview bringSubviewToFront:self.calendar.noneView];
+    }
     [self performAlphaAnimationWithProgress:progress];
     [self performPathAnimationWithProgress:progress];
 }
@@ -359,6 +369,7 @@
 {
     self.calendar.contentView.fs_height = CGRectGetHeight(targetBounds);
     self.calendar.daysContainer.fs_height = CGRectGetHeight(targetBounds)-self.calendar.preferredHeaderHeight-self.calendar.preferredWeekdayHeight;
+    self.calendar.noneView.fs_height = self.calendar.contentView.fs_height;
     [[self.calendar valueForKey:@"delegateProxy"] calendar:self.calendar boundingRectWillChange:targetBounds animated:animated];
 }
 
@@ -376,6 +387,11 @@
     if (animated) {
         if (self.calendar.delegate && ([self.calendar.delegate respondsToSelector:@selector(calendar:boundingRectWillChange:animated:)])) {
             [UIView animateWithDuration:0.3 delay:0 options:UIViewAnimationOptionCurveEaseInOut animations:^{
+                if (self.calendar.scope == FSCalendarScopeNone) {
+                    self.calendar.noneView.alpha = 1;
+                } else {
+                    self.calendar.noneView.alpha = 0;
+                }
                 [self performAlphaAnimationWithProgress:toProgress];
                 self.collectionView.fs_top = [self calculateOffsetForProgress:toProgress];
                 [self boundingRectWillChange:attr.targetBounds animated:YES];

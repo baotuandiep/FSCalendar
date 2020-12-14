@@ -233,6 +233,14 @@ typedef NS_ENUM(NSUInteger, FSCalendarOrientation) {
     
 }
 
+-(void)setNoneView:(UIView *)noneView {
+    _noneView = noneView;
+    _noneView.frame = CGRectMake(0, 0, self.contentView.fs_width, 30);
+    _noneView.userInteractionEnabled = NO;
+    _noneView.alpha = 0;
+    [_contentView addSubview:_noneView];
+}
+
 - (void)dealloc
 {
     self.collectionView.delegate = nil;
@@ -334,6 +342,10 @@ typedef NS_ENUM(NSUInteger, FSCalendarOrientation) {
         _collectionView.fs_height = FSCalendarHalfFloor(_collectionView.fs_height);
     } else if (self.transitionCoordinator.representingScope == FSCalendarScopeNone) {
         [_daysContainer.superview bringSubviewToFront:_daysContainer];
+        if (_noneView != NULL) {
+            [_contentView bringSubviewToFront:_noneView];
+        }
+        _noneView.frame = CGRectMake(0, 0, self.fs_width, 30);
         _daysContainer.frame = CGRectMake(0, 0, self.fs_width, 30);
         _collectionView.frame = CGRectMake(0, 65, _daysContainer.fs_width, 30);
     }
