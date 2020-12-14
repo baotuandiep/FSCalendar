@@ -1459,7 +1459,7 @@ typedef NS_ENUM(NSUInteger, FSCalendarOrientation) {
 - (void)selectCounterpartDate:(NSDate *)date
 {
     if (_placeholderType == FSCalendarPlaceholderTypeNone) return;
-    if (self.scope == FSCalendarScopeWeek) return;
+    if (self.scope != FSCalendarScopeMonth) return;
     NSInteger numberOfDays = [self.gregorian fs_numberOfDaysInMonth:date];
     NSInteger day = [self.gregorian component:NSCalendarUnitDay fromDate:date];
     FSCalendarCell *cell;
@@ -1480,7 +1480,7 @@ typedef NS_ENUM(NSUInteger, FSCalendarOrientation) {
 - (void)deselectCounterpartDate:(NSDate *)date
 {
     if (_placeholderType == FSCalendarPlaceholderTypeNone) return;
-    if (self.scope == FSCalendarScopeWeek) return;
+    if (self.scope != FSCalendarScopeMonth) return;
     NSInteger numberOfDays = [self.gregorian fs_numberOfDaysInMonth:date];
     NSInteger day = [self.gregorian component:NSCalendarUnitDay fromDate:date];
     FSCalendarCell *cell;
