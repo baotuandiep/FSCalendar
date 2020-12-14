@@ -129,9 +129,6 @@
     }
     self.state = FSCalendarTransitionStateChanging;
 
-    NSLog(@"aaaaaa %lu", 2-self.calendar.scope);
-    NSLog(@"current %lu", self.calendar.scope);
-
     FSCalendarScope scope = self.calendar.scope;
     switch (self.calendar.scope) {
         case FSCalendarScopeMonth:
@@ -298,14 +295,17 @@
             dates.copy;
         });
         NSArray<NSDate *> *visibleCandidates = [candidates filteredArrayUsingPredicate:[NSPredicate predicateWithBlock:^BOOL(NSDate *  _Nullable evaluatedObject, NSDictionary<NSString *,id> * _Nullable bindings) {
-//            NSLog(@"targetScope %lu", (unsigned long)targetScope);
-//            NSLog(@"000000 %lu", 2-targetScope);
-//            NSLog(@"111111 %lu", ABS(0-targetScope));
-            NSIndexPath *indexPath = [self.calendar.calculator indexPathForDate:evaluatedObject scope:ABS(0-targetScope)];
-            NSInteger currentSection = [self.calendar.calculator indexPathForDate:self.calendar.currentPage scope:ABS(0-targetScope)].section;
+            NSInteger scope = ABS(0-targetScope);
+//            NSLog(@"111111 %lu", scope);
+//            NSIndexPath *indexPath = [self.calendar.calculator indexPathForDate:evaluatedObject scope:scope];
+//            NSInteger currentSection = [self.calendar.calculator indexPathForDate:self.calendar.currentPage scope:scope].section;
+            NSLog(@"111111 %lu 22222 %lu", scope, 1-targetScope);
+            NSIndexPath *indexPath = [self.calendar.calculator indexPathForDate:evaluatedObject scope:1-targetScope];
+            NSInteger currentSection = [self.calendar.calculator indexPathForDate:self.calendar.currentPage scope:1-targetScope].section;
             return indexPath.section == currentSection;
         }]];
         NSDate *date = visibleCandidates.firstObject;
+        NSLog(@"date %@", date);
         date;
     });
     attributes.focusedRow = ({
