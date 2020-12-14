@@ -86,7 +86,16 @@
     }
     if ([gestureRecognizer isKindOfClass:[UIPanGestureRecognizer class]] && [[gestureRecognizer valueForKey:@"_targets"] containsObject:self.calendar]) {
         CGPoint velocity = [(UIPanGestureRecognizer *)gestureRecognizer velocityInView:gestureRecognizer.view];
-        BOOL shouldStart = self.calendar.scope == FSCalendarScopeWeek ? velocity.y >= 0 : velocity.y <= 0;
+        BOOL shouldStart = NO;
+        switch (self.calendar.scope) {
+            case FSCalendarScopeWeek:
+                shouldStart = YES;
+                break;
+            case FSCalendarScopeMonth:
+                shouldStart = velocity.y <= 0;
+            case FSCalendarScopeNone:
+                shouldStart = velocity.y >= 0;
+        }
         if (!shouldStart) return NO;
         shouldStart = (ABS(velocity.x)<=ABS(velocity.y));
         if (shouldStart) {
@@ -115,12 +124,41 @@
     if (self.calendar.scope == FSCalendarScopeMonth && velocity.y >= 0) {
         return;
     }
-    if (self.calendar.scope == FSCalendarScopeWeek && velocity.y <= 0) {
+    if (self.calendar.scope == FSCalendarScopeNone && velocity.y <= 0) {
         return;
     }
     self.state = FSCalendarTransitionStateChanging;
+
+    NSLog(@"aaaaaa %lu", 2-self.calendar.scope);
+    NSLog(@"current %lu", self.calendar.scope);
+
+    FSCalendarScope scope = self.calendar.scope;
+    switch (self.calendar.scope) {
+        case FSCalendarScopeMonth:
+            if (velocity.y < 0) {
+                scope = FSCalendarScopeWeek;
+            } else {
+                scope = FSCalendarScopeMonth;
+            }
+            break;
+        case FSCalendarScopeWeek: {
+            if (velocity.y < 0) {
+                scope = FSCalendarScopeNone;
+            } else {
+                scope = FSCalendarScopeMonth;
+            }
+            break;
+        }
+        case FSCalendarScopeNone:
+            if (velocity.y < 0) {
+                scope = FSCalendarScopeNone;
+            } else {
+                scope = FSCalendarScopeWeek;
+            }
+            break;
+    }
     
-    self.transitionAttributes = [self createTransitionAttributesTargetingScope:1-self.calendar.scope];
+    self.transitionAttributes = [self createTransitionAttributesTargetingScope:scope];
     
     if (self.transitionAttributes.targetScope == FSCalendarScopeMonth) {
         [self prepareWeekToMonthTransition];
@@ -211,7 +249,6 @@
                 [self boundingRectWillChange:bounds animated:YES];
             } completion:completion];
         }
-        
     }
 }
 
@@ -306,7 +343,8 @@
             contentSize = self.calendar.adjustsBoundingRectWhenChangingMonths ? [self.calendar sizeThatFits:self.calendar.frame.size scope:scope] : self.cachedMonthSize;
             break;
         }
-        case FSCalendarScopeWeek: {
+        case FSCalendarScopeWeek:
+        case FSCalendarScopeNone: {
             contentSize = [self.calendar sizeThatFits:self.calendar.frame.size scope:scope];
             break;
         }

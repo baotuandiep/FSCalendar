@@ -151,6 +151,7 @@
         case FSCalendarScopeWeek:
             return [self.gregorian fs_middleDayOfWeek:[self weekForSection:section]];
         case FSCalendarScopeMonth:
+        case FSCalendarScopeNone:
             return [self monthForSection:section];
         default:
             break;
@@ -202,7 +203,8 @@
         case FSCalendarScopeMonth: {
             return self.numberOfMonths;
         }
-        case FSCalendarScopeWeek: {
+        case FSCalendarScopeWeek:
+        case FSCalendarScopeNone: {
             return self.numberOfWeeks;
         }
     }

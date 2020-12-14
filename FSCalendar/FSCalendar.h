@@ -30,7 +30,8 @@ FOUNDATION_EXPORT const unsigned char FSCalendarVersionString[];
 
 typedef NS_ENUM(NSUInteger, FSCalendarScope) {
     FSCalendarScopeMonth,
-    FSCalendarScopeWeek
+    FSCalendarScopeWeek,
+    FSCalendarScopeNone
 };
 
 typedef NS_ENUM(NSUInteger, FSCalendarScrollDirection) {
