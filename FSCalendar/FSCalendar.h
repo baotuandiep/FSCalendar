@@ -28,10 +28,9 @@ FOUNDATION_EXPORT double FSCalendarVersionNumber;
 //! Project version string for FSCalendar.
 FOUNDATION_EXPORT const unsigned char FSCalendarVersionString[];
 
-typedef NS_ENUM(NSInteger, FSCalendarScope) {
+typedef NS_ENUM(NSUInteger, FSCalendarScope) {
     FSCalendarScopeMonth,
-    FSCalendarScopeWeek,
-    FSCalendarScopeNone
+    FSCalendarScopeWeek
 };
 
 typedef NS_ENUM(NSUInteger, FSCalendarScrollDirection) {
@@ -52,6 +51,8 @@ typedef NS_ENUM(NSUInteger, FSCalendarMonthPosition) {
     
     FSCalendarMonthPositionNotFound = NSNotFound
 };
+
+#import "FSCalendarTransitionCoordinator.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -242,6 +243,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 IB_DESIGNABLE
 @interface FSCalendar : UIView
+@property (strong, nonatomic) FSCalendarTransitionCoordinator *transitionCoordinator;
 
 /**
  * The object that acts as the delegate of the calendar.
@@ -402,11 +404,6 @@ IB_DESIGNABLE
  The dates representing the selected dates. (read-only)
  */
 @property (readonly, nonatomic) NSArray<NSDate *> *selectedDates;
-
-/**
- The weekday view of the calendar
- */
-@property (strong, nonatomic) UIView *noneView;
 
 /**
  Reload the dates and appearance of the calendar.

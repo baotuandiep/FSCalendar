@@ -62,8 +62,6 @@ class FSCalendarScopeExampleViewController: UIViewController, UITableViewDataSou
             case .month:
                 return velocity.y < 0
             case .week:
-                return true
-            case .none:
                 return velocity.y > 0
             }
         }

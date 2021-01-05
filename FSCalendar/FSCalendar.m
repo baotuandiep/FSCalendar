@@ -57,7 +57,6 @@ typedef NS_ENUM(NSUInteger, FSCalendarOrientation) {
 @property (weak  , nonatomic) FSCalendarCollectionView   *collectionView;
 @property (weak  , nonatomic) FSCalendarCollectionViewLayout *collectionViewLayout;
 
-@property (strong, nonatomic) FSCalendarTransitionCoordinator *transitionCoordinator;
 @property (strong, nonatomic) FSCalendarCalculator       *calculator;
 
 @property (weak  , nonatomic) FSCalendarHeaderTouchDeliver *deliver;
@@ -233,14 +232,6 @@ typedef NS_ENUM(NSUInteger, FSCalendarOrientation) {
     
 }
 
--(void)setNoneView:(UIView *)noneView {
-    _noneView = noneView;
-    _noneView.frame = CGRectMake(0, 0, self.contentView.fs_width, 30);
-    _noneView.userInteractionEnabled = NO;
-    _noneView.alpha = 0;
-    [_contentView addSubview:_noneView];
-}
-
 - (void)dealloc
 {
     self.collectionView.delegate = nil;
@@ -294,8 +285,7 @@ typedef NS_ENUM(NSUInteger, FSCalendarOrientation) {
     
     if (_needsAdjustingViewFrame) {
         _needsAdjustingViewFrame = NO;
-        
-        if (CGSizeEqualToSize(_transitionCoordinator.cachedMonthSize, CGSizeZero)) {
+        if (_transitionCoordinator.cachedMonthSize.height < self.frame.size.height) {
             _transitionCoordinator.cachedMonthSize = self.frame.size;
         }
         
@@ -326,10 +316,6 @@ typedef NS_ENUM(NSUInteger, FSCalendarOrientation) {
                     _daysContainer.frame = CGRectMake(0, headerHeight+weekdayHeight, self.fs_width, contentHeight);
                     _collectionView.frame = CGRectMake(0, 0, _daysContainer.fs_width, contentHeight);
                     break;
-                case FSCalendarScopeNone:
-                    _daysContainer.frame = CGRectMake(0, headerHeight+weekdayHeight, self.fs_width, 30);
-                    _collectionView.frame = CGRectMake(0, 0, _daysContainer.fs_width, 30);
-                    break;
                 }
             }
         } else {
@@ -340,15 +326,8 @@ typedef NS_ENUM(NSUInteger, FSCalendarOrientation) {
             
         }
         _collectionView.fs_height = FSCalendarHalfFloor(_collectionView.fs_height);
-    } else if (self.transitionCoordinator.representingScope == FSCalendarScopeNone) {
-        [_daysContainer.superview bringSubviewToFront:_daysContainer];
-        if (_noneView != NULL) {
-            [_contentView bringSubviewToFront:_noneView];
-        }
-        _noneView.frame = CGRectMake(0, 0, self.fs_width, 30);
-        _daysContainer.frame = CGRectMake(0, 0, self.fs_width, 30);
-        _collectionView.frame = CGRectMake(0, 65, _daysContainer.fs_width, 30);
     }
+    
 }
 
 #if TARGET_INTERFACE_BUILDER
@@ -384,9 +363,6 @@ typedef NS_ENUM(NSUInteger, FSCalendarOrientation) {
                 CGFloat height = weekdayHeight + headerHeight + rowHeight + paddings;
                 return CGSizeMake(size.width, height);
             }
-            case FSCalendarScopeNone: {
-                return CGSizeMake(size.width, 30);
-            }
         }
     } else {
         return CGSizeMake(size.width, self.fs_height);
@@ -412,8 +388,7 @@ typedef NS_ENUM(NSUInteger, FSCalendarOrientation) {
         case FSCalendarScopeMonth: {
             return 42;
         }
-        case FSCalendarScopeWeek:
-        case FSCalendarScopeNone: {
+        case FSCalendarScopeWeek: {
             return 7;
         }
     }
@@ -634,8 +609,7 @@ typedef NS_ENUM(NSUInteger, FSCalendarOrientation) {
             targetPage = [self.gregorian dateByAddingUnit:NSCalendarUnitMonth value:sections toDate:minimumPage options:0];
             break;
         }
-        case FSCalendarScopeWeek:
-        case FSCalendarScopeNone: {
+        case FSCalendarScopeWeek: {
             NSDate *minimumPage = [self.gregorian fs_firstDayOfWeek:_minimumDate];
             targetPage = [self.gregorian dateByAddingUnit:NSCalendarUnitWeekOfYear value:sections toDate:minimumPage options:0];
             break;
@@ -690,8 +664,7 @@ typedef NS_ENUM(NSUInteger, FSCalendarOrientation) {
                 [self setNeedsLayout];
                 break;
             }
-            case FSCalendarScopeWeek:
-            case FSCalendarScopeNone: {
+            case FSCalendarScopeWeek: {
                 break;
             }
         }
@@ -1208,8 +1181,7 @@ typedef NS_ENUM(NSUInteger, FSCalendarOrientation) {
                     _currentPage = [self.gregorian fs_firstDayOfMonth:date];
                     break;
                 }
-                case FSCalendarScopeWeek:
-                case FSCalendarScopeNone: {
+                case FSCalendarScopeWeek: {
                     _currentPage = [self.gregorian fs_firstDayOfWeek:date];
                     break;
                 }
@@ -1277,7 +1249,6 @@ typedef NS_ENUM(NSUInteger, FSCalendarOrientation) {
         case FSCalendarScopeMonth:
             return ![self.gregorian isDate:date equalToDate:_currentPage toUnitGranularity:NSCalendarUnitMonth];
         case FSCalendarScopeWeek:
-        case FSCalendarScopeNone:
             return ![self.gregorian isDate:date equalToDate:_currentPage toUnitGranularity:NSCalendarUnitWeekOfYear];
     }
 }
@@ -1423,8 +1394,7 @@ typedef NS_ENUM(NSUInteger, FSCalendarOrientation) {
             }
             break;
         }
-        case FSCalendarScopeWeek:
-        case FSCalendarScopeNone: {
+        case FSCalendarScopeWeek: {
             cell.placeholder = ![self isDateInRange:date];
             break;
         }
@@ -1474,7 +1444,7 @@ typedef NS_ENUM(NSUInteger, FSCalendarOrientation) {
 - (void)selectCounterpartDate:(NSDate *)date
 {
     if (_placeholderType == FSCalendarPlaceholderTypeNone) return;
-    if (self.scope != FSCalendarScopeMonth) return;
+    if (self.scope == FSCalendarScopeWeek) return;
     NSInteger numberOfDays = [self.gregorian fs_numberOfDaysInMonth:date];
     NSInteger day = [self.gregorian component:NSCalendarUnitDay fromDate:date];
     FSCalendarCell *cell;
@@ -1495,7 +1465,7 @@ typedef NS_ENUM(NSUInteger, FSCalendarOrientation) {
 - (void)deselectCounterpartDate:(NSDate *)date
 {
     if (_placeholderType == FSCalendarPlaceholderTypeNone) return;
-    if (self.scope != FSCalendarScopeMonth) return;
+    if (self.scope == FSCalendarScopeWeek) return;
     NSInteger numberOfDays = [self.gregorian fs_numberOfDaysInMonth:date];
     NSInteger day = [self.gregorian component:NSCalendarUnitDay fromDate:date];
     FSCalendarCell *cell;

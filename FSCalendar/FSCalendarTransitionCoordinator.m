@@ -6,32 +6,8 @@
 //  Copyright © 2016 Wenchao Ding. All rights reserved.
 //
 
-#import "FSCalendarTransitionCoordinator.h"
 #import "FSCalendarExtensions.h"
 #import "FSCalendarDynamicHeader.h"
-
-@interface FSCalendarTransitionCoordinator ()
-
-@property (weak, nonatomic) FSCalendarCollectionView *collectionView;
-@property (weak, nonatomic) FSCalendarCollectionViewLayout *collectionViewLayout;
-@property (weak, nonatomic) FSCalendar *calendar;
-
-@property (strong, nonatomic) FSCalendarTransitionAttributes *transitionAttributes;
-
-- (FSCalendarTransitionAttributes *)createTransitionAttributesTargetingScope:(FSCalendarScope)targetScope;
-
-- (void)performTransitionCompletionAnimated:(BOOL)animated;
-
-- (void)performAlphaAnimationWithProgress:(CGFloat)progress;
-- (void)performPathAnimationWithProgress:(CGFloat)progress;
-
-- (void)scopeTransitionDidBegin:(UIPanGestureRecognizer *)panGesture;
-- (void)scopeTransitionDidUpdate:(UIPanGestureRecognizer *)panGesture;
-- (void)scopeTransitionDidEnd:(UIPanGestureRecognizer *)panGesture;
-
-- (void)boundingRectWillChange:(CGRect)targetBounds animated:(BOOL)animated;
-
-@end
 
 @implementation FSCalendarTransitionCoordinator
 
@@ -86,16 +62,7 @@
     }
     if ([gestureRecognizer isKindOfClass:[UIPanGestureRecognizer class]] && [[gestureRecognizer valueForKey:@"_targets"] containsObject:self.calendar]) {
         CGPoint velocity = [(UIPanGestureRecognizer *)gestureRecognizer velocityInView:gestureRecognizer.view];
-        BOOL shouldStart = NO;
-        switch (self.calendar.scope) {
-            case FSCalendarScopeWeek:
-                shouldStart = YES;
-                break;
-            case FSCalendarScopeMonth:
-                shouldStart = velocity.y <= 0;
-            case FSCalendarScopeNone:
-                shouldStart = velocity.y >= 0;
-        }
+        BOOL shouldStart = self.calendar.scope == FSCalendarScopeWeek ? velocity.y >= 0 : velocity.y <= 0;
         if (!shouldStart) return NO;
         shouldStart = (ABS(velocity.x)<=ABS(velocity.y));
         if (shouldStart) {
@@ -124,38 +91,12 @@
     if (self.calendar.scope == FSCalendarScopeMonth && velocity.y >= 0) {
         return;
     }
-    if (self.calendar.scope == FSCalendarScopeNone && velocity.y <= 0) {
+    if (self.calendar.scope == FSCalendarScopeWeek && velocity.y <= 0) {
         return;
     }
     self.state = FSCalendarTransitionStateChanging;
-
-    FSCalendarScope scope = self.calendar.scope;
-    switch (self.calendar.scope) {
-        case FSCalendarScopeMonth:
-            if (velocity.y < 0) {
-                scope = FSCalendarScopeWeek;
-            } else {
-                scope = FSCalendarScopeMonth;
-            }
-            break;
-        case FSCalendarScopeWeek: {
-            if (velocity.y < 0) {
-                scope = FSCalendarScopeNone;
-            } else {
-                scope = FSCalendarScopeMonth;
-            }
-            break;
-        }
-        case FSCalendarScopeNone:
-            if (velocity.y < 0) {
-                scope = FSCalendarScopeNone;
-            } else {
-                scope = FSCalendarScopeWeek;
-            }
-            break;
-    }
     
-    self.transitionAttributes = [self createTransitionAttributesTargetingScope:scope];
+    self.transitionAttributes = [self createTransitionAttributesTargetingScope:1-self.calendar.scope];
     
     if (self.transitionAttributes.targetScope == FSCalendarScopeMonth) {
         [self prepareWeekToMonthTransition];
@@ -174,16 +115,6 @@
         CGFloat progress = translation/maxTranslation;
         progress;
     });
-    if (self.transitionAttributes.targetScope == FSCalendarScopeNone || self.calendar.scope == FSCalendarScopeNone) {
-        CGFloat noneScopeProgress = progress;
-        if (self.calendar.scope == FSCalendarScopeNone) {
-            noneScopeProgress = 1 - noneScopeProgress;
-        }
-        self.calendar.noneView.alpha = noneScopeProgress;
-        NSLog(@"noneScopeProgress %f", noneScopeProgress);
-        self.calendar.noneView.fs_width = self.calendar.noneView.superview.fs_width;
-        [self.calendar.noneView.superview bringSubviewToFront:self.calendar.noneView];
-    }
     [self performAlphaAnimationWithProgress:progress];
     [self performPathAnimationWithProgress:progress];
 }
@@ -256,6 +187,7 @@
                 [self boundingRectWillChange:bounds animated:YES];
             } completion:completion];
         }
+        
     }
 }
 
@@ -305,17 +237,11 @@
             dates.copy;
         });
         NSArray<NSDate *> *visibleCandidates = [candidates filteredArrayUsingPredicate:[NSPredicate predicateWithBlock:^BOOL(NSDate *  _Nullable evaluatedObject, NSDictionary<NSString *,id> * _Nullable bindings) {
-            NSInteger scope = ABS(0-targetScope);
-//            NSLog(@"111111 %lu", scope);
-//            NSIndexPath *indexPath = [self.calendar.calculator indexPathForDate:evaluatedObject scope:scope];
-//            NSInteger currentSection = [self.calendar.calculator indexPathForDate:self.calendar.currentPage scope:scope].section;
-            NSLog(@"111111 %lu 22222 %lu", scope, 1-targetScope);
             NSIndexPath *indexPath = [self.calendar.calculator indexPathForDate:evaluatedObject scope:1-targetScope];
             NSInteger currentSection = [self.calendar.calculator indexPathForDate:self.calendar.currentPage scope:1-targetScope].section;
             return indexPath.section == currentSection;
         }]];
         NSDate *date = visibleCandidates.firstObject;
-        NSLog(@"date %@", date);
         date;
     });
     attributes.focusedRow = ({
@@ -356,8 +282,7 @@
             contentSize = self.calendar.adjustsBoundingRectWhenChangingMonths ? [self.calendar sizeThatFits:self.calendar.frame.size scope:scope] : self.cachedMonthSize;
             break;
         }
-        case FSCalendarScopeWeek:
-        case FSCalendarScopeNone: {
+        case FSCalendarScopeWeek: {
             contentSize = [self.calendar sizeThatFits:self.calendar.frame.size scope:scope];
             break;
         }
@@ -369,7 +294,6 @@
 {
     self.calendar.contentView.fs_height = CGRectGetHeight(targetBounds);
     self.calendar.daysContainer.fs_height = CGRectGetHeight(targetBounds)-self.calendar.preferredHeaderHeight-self.calendar.preferredWeekdayHeight;
-    self.calendar.noneView.fs_height = self.calendar.contentView.fs_height;
     [[self.calendar valueForKey:@"delegateProxy"] calendar:self.calendar boundingRectWillChange:targetBounds animated:animated];
 }
 
@@ -387,11 +311,6 @@
     if (animated) {
         if (self.calendar.delegate && ([self.calendar.delegate respondsToSelector:@selector(calendar:boundingRectWillChange:animated:)])) {
             [UIView animateWithDuration:0.3 delay:0 options:UIViewAnimationOptionCurveEaseInOut animations:^{
-                if (self.calendar.scope == FSCalendarScopeNone) {
-                    self.calendar.noneView.alpha = 1;
-                } else {
-                    self.calendar.noneView.alpha = 0;
-                }
                 [self performAlphaAnimationWithProgress:toProgress];
                 self.collectionView.fs_top = [self calculateOffsetForProgress:toProgress];
                 [self boundingRectWillChange:attr.targetBounds animated:YES];
