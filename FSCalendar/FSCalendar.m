@@ -282,12 +282,12 @@ typedef NS_ENUM(NSUInteger, FSCalendarOrientation) {
 - (void)layoutSubviews
 {
     [super layoutSubviews];
-    
+    if (_transitionCoordinator.cachedMonthSize.height < self.frame.size.height) {
+        _transitionCoordinator.cachedMonthSize = self.frame.size;
+        _needsAdjustingViewFrame = true;
+    }
     if (_needsAdjustingViewFrame) {
         _needsAdjustingViewFrame = NO;
-        if (_transitionCoordinator.cachedMonthSize.height < self.frame.size.height) {
-            _transitionCoordinator.cachedMonthSize = self.frame.size;
-        }
         
         _contentView.frame = self.bounds;
         CGFloat headerHeight = self.preferredHeaderHeight;
